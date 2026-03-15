@@ -1,7 +1,8 @@
 import express from "express";
+import cors from "cors";
+
 import { ENV } from "./config/env";
 import { clerkMiddleware } from '@clerk/express';
-import cors from "cors";
 
 const app = express();
 
