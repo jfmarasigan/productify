@@ -12,17 +12,29 @@ export const getUserById = async (id: string) => {
 };
 
 export const updateUser = async (id: string, data: Partial<NewUser>) => {
+  const existingUser = await getUserById(id);
+  if (!existingUser) {
+    throw new Error(`User with id ${id} not found`);
+  }
   const [user] = await db.update(users).set(data).where(eq(users.id, id)).returning();
   return user;
 };
 
 export const upsertUser = async (data: NewUser) => {
-  const existingUser = await getUserById(data.id);
-  if (existingUser) {
-    return updateUser(data.id, data);
-  } else {
-    return createUser(data);
-  }
+  // const existingUser = await getUserById(data.id);
+  // if (existingUser) {
+  //   return updateUser(data.id, data);
+  // } else {
+  //   return createUser(data);
+  // }
+  return await db
+    .insert(users)
+    .values(data)
+    .onConflictDoUpdate({ 
+      target: users.id,
+      set: data
+    })
+    .returning();
 };
 
 export const createProduct = async (newProduct: NewProduct) => {
@@ -62,11 +74,21 @@ export const getProductsByUserId = async (userId: string) => {
 };
 
 export const updateProduct = async (id: string, newProduct: Partial<NewProduct>) => {
+  const existingProduct = await getProductById(id);
+  if (!existingProduct) {
+    throw new Error(`Product with id ${id} not found`);
+  }
+
   const [product] = await db.update(products).set(newProduct).where(eq(products.id, id)).returning();
   return product;
 };
 
 export const deleteProduct = async (id: string) => {
+  const existingProduct = await getProductById(id);
+  if (!existingProduct) {
+    throw new Error(`Product with id ${id} not found`);
+  }
+
   const [product] = await db.delete(products).where(eq(products.id, id)).returning();
   return product;
 };
@@ -77,6 +99,10 @@ export const createComment = async (newComment: NewComment) => {
 };
 
 export const deleteComment = async (id: string) => {
+  const existingComment = await getCommentById(id);
+  if (!existingComment) {
+    throw new Error(`Product with id ${id} not found`);
+  }
   const [comment] = await db.delete(comments).where(eq(comments.id, id)).returning();
   return comment;
 };
